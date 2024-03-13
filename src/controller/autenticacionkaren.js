@@ -1,51 +1,41 @@
-import { Router } from "express";
-import usuarios from '../models/atenticaUsuariokaren.js';
-import jwt from 'jsonwebtoken';
-export const  secreto ='../database/config.js';
-export const rutavalidacion = Router();
-
-rutavalidacion.post('/validacion', (req, res) => {
-    const { identificacion, password } = req.body;
-    const usuario = new usuarios({
-        identificacion: identificacion,
-        password: password
-    });
-    console.log(usuario);
-
-    if (usuario && usuario._id) {
-        const token = jwt.sign({ id: usuario._id }, secreto.secreto, {
-            expiresIn: 60 * 60 * 24
-        });
-
-        res.json({ auth: true, token });
-    } else {
-        console.error('Error: usuario o usuario._id es undefined.');
-        res.status(500).json({ error: 'Error interno del servidor' });
-    }
-});
+import  jwt from "jsonwebtoken"
+import Usuario from "../models/LAUP.usuarios.models.js";
+import { SECRET_TOKEN } from "../config.js";
 
 
-export const validarToken = async (req, res, next) => {
+export const validarCliente = async (req, res) => {
     try {
-        let tokenClient = req.headers['token'];
+        const { identificacion, contraseña } = req.body;
+        const usuario = await Usuario.findOne({ identificacion, contraseña });
 
-        if (!tokenClient) {
-            return res.status(403).json({ 
-                auth:false ,
-                message: 'Token es requerido' });
-        } else {
-            const token = jwt.verify(tokenClient, secreto.secreto, (error,decoded) => {
-                if (error) {
-                    return res.status(403).json({ message: 'Token inválido' });
-                } else {
-                    next();
-                }
-            });
+        if (!usuario) {
+            return res.status(404).json({ message: "Usuario no encontrado" });
         }
+
+        if (contraseña !== usuario.contraseña) {
+            return res.status(401).json({ message: "Contraseña incorrecta" });
+        }
+
+        const token = jwt.sign({ id: usuario._id }, SECRET_TOKEN);
+
+        return res.status(200).json({ identificacion: usuario.identificacion, token, message: 'Token generado con éxito' });
     } catch (error) {
-        return res.status(500).json({ status: 500, message: 'Error del servidor' + error });
+        console.error(error);
+        return res.status(500).json({ message: "Error del servidor"+ error });
     }
 };
+export const validarToken = (req, res, next) => {
+    const token = req.headers['token'];
 
-
-export default rutavalidacion ;
+    if (!token) {
+        return res.status(404).send({ message: "token es requerido" });
+    } else {
+        jwt.verify(token, SECRET_TOKEN, (error, decoded) => {
+            if (error) {
+                return res.status(404).json({ 'message': 'token incorrecto' });
+            } else {
+                next();
+            }
+        });
+    }
+}

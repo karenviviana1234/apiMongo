@@ -6,17 +6,17 @@ try {
     const create = await Clientes.create(req.body)
 if (create) {
     res.status(200).json({
-        "mensaje":create
+        message:"Registrado con exito",create
     }) 
 }else{
     res.status(404).json({
-        "mensaje":"algo salio mal"
+        message:"No se puedo regsitrar"
     })
 }
  
 } catch (error) {
     res.status(500).json({
-        "mensaje":error.message
+        message:"Error en el sistema"+error
     })
 }
 }
@@ -28,33 +28,16 @@ export const listarCliente = async(req, res)=>{
             res.status(200).json(show)
         }else{
             res.status(404).json({
-                "mensaje":"Algo salio mal"
+                message:"No se encontraron Clientes"
             })
         }
     } catch (error) {
         res.status(500).json({
-            "mensaje":error.message
+            message:"Error en el sistema"+ error
         })
     }
 }
-export const buscarCliente = async (req, res) => {
-    try {
-        const {_id}=req.params
-        const show = await Clientes.findById(_id);
-        if (show) {
-            res.status(200).json(show); 
-        } else {
-            res.status(404).json({
-                "mensaje": "no se encontró el cliente"
-            });
-        }
 
-    } catch (error) {
-        res.status(500).json({
-            "mensaje": error.message
-        });
-    }
-};
 export const eliminarCliente = async (req, res) => {
     try {
         const { _id } = req.params;
@@ -62,11 +45,11 @@ export const eliminarCliente = async (req, res) => {
 
         if (!cliente) {
             return res.status(404).json({
-                "mensaje": "no se encontró un cliente para eliminar"
+                message: "no se encontró un cliente para eliminar"
             });
         }
         res.status(200).json({
-            "mensaje": "Cliente eliminado exitosamente",
+            message: "Cliente eliminado exitosamente",
             "interes": cliente  
         });
     } catch (error) {
@@ -80,17 +63,13 @@ export const actualizarCliente = async (req, res) => {
         const consulta = await Clientes.findByIdAndUpdate(_id, req.body, { new: true });
 
         if (!consulta) {
-            // Si no se encontró el interés para eliminar, envía un mensaje de error
             return res.status(404).json({
-                "mensaje": "no se encontró un cliente para actualizar"
+                message: "no se encontró un cliente para actualizar"
             });
         }
-        // Si el interés fue encontrado y eliminado exitosamente, envía un mensaje de éxito
         res.status(200).json({
-            "mensaje": "cliente actualizado exitosamente",
+            message: "cliente actualizado exitosamente",
         });
-    } catch (error) {
-        // Si hay un error, captúralo y envía un mensaje de error
-        res.status(500).json({ message: error.message });
+    } catch (error) {        res.status(500).json({ message: error.message });
     }
 };
